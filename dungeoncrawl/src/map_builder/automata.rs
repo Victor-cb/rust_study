@@ -1,9 +1,9 @@
 use super::MapArchitect;
 use crate::prelude::*;
 
-pub struct CelullarAutomataArchitect {}
+pub struct CellularAutomataArchitect {}
 
-impl MapArchitect for CelullarAutomataArchitect {
+impl MapArchitect for CellularAutomataArchitect {
     fn new(&mut self, rng: &mut RandomNumberGenerator) -> MapBuilder {
         let mut mb = MapBuilder {
             map: Map::new(),
@@ -12,11 +12,19 @@ impl MapArchitect for CelullarAutomataArchitect {
             player_start: Point::zero(),
             amulet_start: Point::zero(),
         };
+        self.random_noise_map(rng, &mut mb.map);
+        for _ in 0..10{
+            self.iteration(&mut mb.map);
+        }
+        let start= self.find_start(&mb.map);
+        mb.monster_spawns=mb.spawn_monster(&start, rng);
+        mb.player_start=start;
+        mb.amulet_start=mb.find_most_distant();
         mb
     }
 }
 
-impl CelullarAutomataArchitect {
+impl CellularAutomataArchitect {
     fn random_noise_map(&mut self, rng: &mut RandomNumberGenerator, map: &mut Map) {
         map.tiles.iter_mut().for_each(|t| {
             let roll = rng.range(0, 100);

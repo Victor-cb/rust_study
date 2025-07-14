@@ -1,10 +1,12 @@
-use crate::{prelude::*, turn_state};
+use crate::prelude::*;
 
 #[system]
 #[write_component(Point)]
 #[read_component(Player)]
 #[read_component(Enemy)]
 #[write_component(Health)]
+#[read_component(Item)]
+#[read_component(Carried)]
 pub fn player_input(
     ecs: &mut SubWorld,
     commands: &mut CommandBuffer,
@@ -12,12 +14,31 @@ pub fn player_input(
     #[resource] turn_state: &mut TurnState,
 ) {
     let mut players = <(Entity, &Point)>::query().filter(component::<Player>());
-    if let Some(key) = key {
+    // let mut enemies = <(Entity, &Point)>::query().filter(component::<Enemy>());
+
+    if let Some(key) = *key {
         let delta = match key {
             VirtualKeyCode::Left => Point::new(-1, 0),
             VirtualKeyCode::Right => Point::new(1, 0),
             VirtualKeyCode::Up => Point::new(0, -1),
             VirtualKeyCode::Down => Point::new(0, 1),
+            VirtualKeyCode::G => {
+                // (1)
+                let (player, player_pos) = players // (2)
+                    .iter(ecs)
+                    .find_map(|(entity, pos)| Some((*entity, *pos))) // (3)
+                    .unwrap();
+
+                let mut items = <(Entity, &Item, &Point)>::query(); // (4)
+                items
+                    .iter(ecs)
+                    .filter(|(_entity, _item, item_pos)| item_pos == &&player_pos) // (5)
+                    .for_each(|(entity, _item, _item_pos)| {
+                        commands.remove_component::<Point>(*entity); // (6)
+                        commands.add_component(*entity, Carried(player)); // (7)
+                    });
+                Point::new(0, 0)
+            },
             _ => Point::new(0, 0),
         };
         let (player_entity, destination) = players

@@ -1,8 +1,5 @@
 mod template;
 use crate::{prelude::*, spawner::template::Templates};
-use template::Template;
-
-
 
 pub fn spawn_level(
     ecs:&mut World,

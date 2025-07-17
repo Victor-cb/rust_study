@@ -15,6 +15,7 @@ pub struct Template {
     pub glyph: char,
     pub provides: Option<Vec<(String, i32)>>,
     pub hp: Option<i32>,
+    pub base_damage: Option<i32>,
 }
 
 #[derive(Clone, Deserialize, Debug, PartialEq)]
@@ -41,7 +42,7 @@ impl Templates {
         level: usize,
         spawn_points: &[Point],
     ) {
-        let mut available_entities  = Vec::new();
+        let mut available_entities = Vec::new();
         self.entities
             .iter()
             .filter(|e| e.levels.contains(&level))
@@ -97,6 +98,12 @@ impl Templates {
                         println!("Warning: we don't now how to provide {}", provides);
                     }
                 });
+        }
+        if let Some(damage) = &template.base_damage {
+            commands.add_component(entity, Damage(*damage));
+            if template.entity_type == EntityType::Item {
+                commands.add_component(entity, Weapon {});
+            }
         }
     }
 }
